@@ -3,20 +3,29 @@ import ListColumns from "./ListColumns/ListColumns";
 import { mapOrder } from "~/utils/sort";
 import {
   DndContext,
-  PointerSensor,
+  // PointerSensor,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { useEffect, useState } from "react";
+import Column from "./ListColumns/Column/Column";
+import Card from "./ListColumns/Column/ListCards/Card/Card";
+
+const ACTIVE_DRAG_ITEM_TYPE = {
+  COLUMN: "ACTIVE_DRAG_ITEM_TYPE_COLUMN",
+  CARD: "ACTIVE_DRAG_ITEM_TYPE_CARD",
+};
 
 function BoardContent({ board }) {
-  const pointerSensor = useSensor(PointerSensor, {
-    activationConstraint: { distance: 10 },
-  });
+  // const pointerSensor = useSensor(PointerSensor, {
+  //   activationConstraint: { distance: 10 },
+  // });
   //Di chuot 10px moi kich hoat event
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: { distance: 10 },
@@ -28,14 +37,29 @@ function BoardContent({ board }) {
   const sensors = useSensors(mouseSensor, toughSensor);
 
   const [orderedColumn, setOrderedColumn] = useState([]);
+  const [activeDragItemId, setActiveDragItemId] = useState(null);
+  const [activeDragItemType, setActiveDragItemType] = useState(null);
+  const [activeDragItemData, setActiveDragItemData] = useState(null);
 
   useEffect(() => {
     setOrderedColumn(mapOrder(board?.columns, board?.columnOrderIds, "_id"));
   }, [board]);
 
+  //Trigger khi bat dau keo phan tu
+  const handleDragStart = (event) => {
+    console.log("🚀 ~ handleDragStart ~ event:", event);
+    setActiveDragItemId(event?.active?.id);
+    setActiveDragItemType(
+      event?.active?.data?.current?.columnId
+        ? ACTIVE_DRAG_ITEM_TYPE.CARD
+        : ACTIVE_DRAG_ITEM_TYPE.COLUMN
+    );
+    setActiveDragItemData(event?.active?.data?.current);
+  };
+
+  //Trigger khi keets thuc hanh dong keo tha phan tu
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     //Neu khong ton tai over thi return => tranh loi
     if (!over) return;
 
@@ -51,10 +75,29 @@ function BoardContent({ board }) {
       // );
 
       setOrderedColumn(dndOrderedColumn);
+
+      setActiveDragItemData(null);
+      setActiveDragItemId(null);
+      setActiveDragItemType(null);
     }
   };
+
+  const dropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: {
+        active: {
+          opacity: "0.5",
+        },
+      },
+    }),
+  };
+
   return (
-    <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
+    <DndContext
+      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+      sensors={sensors}
+    >
       <Box
         sx={{
           bgcolor: (theme) =>
@@ -65,6 +108,15 @@ function BoardContent({ board }) {
         }}
       >
         <ListColumns columns={orderedColumn} />
+        <DragOverlay dropAnimation={dropAnimation}>
+          {!activeDragItemType && null}
+          {activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN && (
+            <Column column={activeDragItemData} />
+          )}
+          {activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD && (
+            <Card card={activeDragItemData} />
+          )}
+        </DragOverlay>
       </Box>
     </DndContext>
   );
