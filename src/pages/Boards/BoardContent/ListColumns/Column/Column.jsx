@@ -19,7 +19,29 @@ import ListCards from "./ListCards/ListCards";
 import theme from "~/theme";
 import { mapOrder } from "~/utils/sort";
 
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 function Column({ column }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column._id,
+    data: { ...column },
+  });
+  const dndKitColumnStyles = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    // touchAction: "none",
+    height: "100%",
+    opacity: isDragging ? 0.6 : undefined,
+  };
+
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -31,9 +53,9 @@ function Column({ column }) {
 
   const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, "id");
   return (
-    <div>
-      {/* Box Column 01*/}
+    <div ref={setNodeRef} style={dndKitColumnStyles} {...attributes}>
       <Box
+        {...listeners}
         sx={{
           minWidth: "300px",
           maxWidth: "300px",

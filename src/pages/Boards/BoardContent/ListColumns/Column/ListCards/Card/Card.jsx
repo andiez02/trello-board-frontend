@@ -9,8 +9,28 @@ import {
   CardMedia,
   Typography,
 } from "@mui/material";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const Card = ({ card }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: card._id,
+    data: { ...card },
+  });
+  const dndKitCardStyles = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    // touchAction: "none",
+    opacity: isDragging ? 0.6 : undefined,
+  };
+
   const shouldShowCardActions = () => {
     return (
       !!card?.memberIds?.length ||
@@ -22,6 +42,10 @@ const Card = ({ card }) => {
   return (
     <div>
       <MuiCard
+        ref={setNodeRef}
+        style={dndKitCardStyles}
+        {...attributes}
+        {...listeners}
         sx={{
           cursor: "pointer",
           boxShadow: "0 1px 1px rgba(0, 0, 0, 0.2)",
@@ -36,7 +60,7 @@ const Card = ({ card }) => {
         {shouldShowCardActions && (
           <CardActions
             sx={{
-              p: "0 4px 8px 4px",
+              p: "0 4px ",
             }}
           >
             {!!card?.memberIds?.length && (
