@@ -11,17 +11,16 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
   pointerWithin,
-  rectIntersection,
   closestCorners,
   getFirstCollision,
-  closestCenter,
 } from "@dnd-kit/core";
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Column from "./ListColumns/Column/Column";
 import Card from "./ListColumns/Column/ListCards/Card/Card";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isEmpty } from "lodash";
+import { generatePlaceholderCard } from "~/utils/formatter";
 
 const ACTIVE_DRAG_ITEM_TYPE = {
   COLUMN: "ACTIVE_DRAG_ITEM_TYPE_COLUMN",
@@ -103,6 +102,12 @@ function BoardContent({ board }) {
         nextActiveColumn.cards = nextActiveColumn.cards.filter(
           (card) => card._id !== activeDraggingCardId
         );
+
+        //Thêm Placeholder Card
+        if (isEmpty(nextActiveColumn.cards)) {
+          nextActiveColumn.cards = [generatePlaceholderCard(nextActiveColumn)];
+        }
+
         nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(
           (card) => card._id
         );
@@ -118,6 +123,11 @@ function BoardContent({ board }) {
           ...activeDraggingCardData,
           columnId: nextOverColumn._id,
         };
+
+        //Xoá Placeholder Card nếu đang tồn tại
+        nextOverColumn.cards = nextOverColumn.cards.filter(
+          (card) => !card.FE_PlaceholderCard
+        );
 
         //Thêm card đang kéo vào overColumn theo vị trí index mới
         nextOverColumn.cards = nextOverColumn.cards.toSpliced(
@@ -297,19 +307,22 @@ function BoardContent({ board }) {
       }
 
       const pointerIntersections = pointerWithin(args);
-      const intersections =
-        pointerIntersections.length > 0
-          ? pointerIntersections
-          : rectIntersection(args);
 
-      let overId = getFirstCollision(intersections, "id");
+      if (!pointerIntersections?.length) return;
+
+      // const intersections =
+      //   pointerIntersections.length > 0
+      //     ? pointerIntersections
+      //     : rectIntersection(args);
+
+      let overId = getFirstCollision(pointerIntersections, "id");
 
       if (overId) {
         const checkColumn = orderedColumns.find(
           (column) => column._id === overId
         );
         if (checkColumn) {
-          overId = closestCenter({
+          overId = closestCorners({
             ...args,
             droppableContainers: args.droppableContainers.filter(
               (container) => {
