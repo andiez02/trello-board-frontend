@@ -29,6 +29,7 @@ const Card = ({ card }) => {
     transition,
     // touchAction: "none",
     opacity: isDragging ? 0.6 : undefined,
+    border: isDragging ? "1px solid #2ecc71" : "",
   };
 
   const shouldShowCardActions = () => {
