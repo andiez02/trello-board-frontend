@@ -19,8 +19,6 @@ import DragHandleIcon from "@mui/icons-material/DragHandle";
 import ListCards from "./ListCards/ListCards";
 import CloseIcon from "@mui/icons-material/Close";
 import theme from "~/theme";
-import { mapOrder } from "~/utils/sort";
-
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "react-toastify";
@@ -54,7 +52,8 @@ function Column({ column, createNewCard }) {
     setAnchorEl(null);
   };
 
-  const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, "_id");
+  //? sorted at _id.jsx
+  const orderedCards = column.cards;
 
   const [openNewCardForm, setOpenNewCardForm] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState();
@@ -78,7 +77,7 @@ function Column({ column, createNewCard }) {
       columnId: column._id,
     };
 
-    await createNewCard(newCardData);
+    createNewCard(newCardData);
 
     //Đóng trạng thái thêm Card & Clear Input
     toggleOpenNewCardForm();

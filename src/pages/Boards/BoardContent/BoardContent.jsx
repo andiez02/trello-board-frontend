@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import ListColumns from "./ListColumns/ListColumns";
-import { mapOrder } from "~/utils/sort";
 import {
   DndContext,
   // PointerSensor,
@@ -28,7 +27,13 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: "ACTIVE_DRAG_ITEM_TYPE_CARD",
 };
 
-function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
+function BoardContent({
+  board,
+  createNewColumn,
+  createNewCard,
+  moveColumns,
+  moveCardInSameColumn,
+}) {
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: { distance: 10 },
   // });
@@ -54,7 +59,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   const lastOverId = useRef(null);
 
   useEffect(() => {
-    setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, "_id"));
+    //? sorted at _id.jsx
+    setOrderedColumns(board.columns);
   }, [board]);
 
   //Tìm column theo cardId
@@ -243,6 +249,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
           newCardIndex
         );
 
+        const dndOrderCardIds = dndOrderedCards.map((card) => card._id);
+
         setOrderedColumns((prevColumns) => {
           const nextColumns = cloneDeep(prevColumns);
 
@@ -253,10 +261,17 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
 
           //Cập nhật 2 giá trị mới là Card và CardIds trong targetColumn
           targetColumn.cards = dndOrderedCards;
-          targetColumn.cardOrderIds = dndOrderedCards.map((card) => card._id);
+          targetColumn.cardOrderIds = dndOrderCardIds;
 
           return nextColumns;
         });
+
+        //Call API
+        moveCardInSameColumn(
+          dndOrderedCards,
+          dndOrderCardIds,
+          oldColumnWhenDraggingCard._id
+        );
       }
     }
 
@@ -280,9 +295,9 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
         //   "🚀 ~ handleDragEnd ~ dndOrderedColumnIds:",
         //   dndOrderedColumnIds
         // );
-        moveColumns(dndOrderedColumn);
-
         setOrderedColumns(dndOrderedColumn);
+
+        moveColumns(dndOrderedColumn);
       }
 
       setActiveDragItemData(null);
