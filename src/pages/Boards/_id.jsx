@@ -8,12 +8,14 @@ import {
   fetchBoardDetailAPI,
   createNewColumnAPI,
   createNewCardAPI,
+  updateBoardDetailAPI,
 } from "~/apis";
 import { generatePlaceholderCard } from "~/utils/formatter";
 import { isEmpty } from "lodash";
 
 function Board() {
   const [board, setBoard] = useState(null);
+  console.log("🚀 ~ Board ~ board:", board);
 
   useEffect(() => {
     const boardId = "67848999fd4e30cb0c0e5078";
@@ -65,6 +67,20 @@ function Board() {
     }
   };
 
+  const moveColumns = async (dndOrderedColumns) => {
+    const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id);
+
+    const newBoard = { ...board };
+    newBoard.columns = dndOrderedColumns;
+    newBoard.columnOrderIds = dndOrderedColumnsIds;
+    setBoard(newBoard);
+
+    //Call API
+    await updateBoardDetailAPI(newBoard._id, {
+      columnOrderIds: dndOrderedColumnsIds,
+    });
+  };
+
   return (
     <Container disableGutters maxWidth={false} sx={{ height: "100vh" }}>
       <AppBar />
@@ -73,6 +89,7 @@ function Board() {
         board={board}
         createNewColumn={createNewColumn}
         createNewCard={createNewCard}
+        moveColumns={moveColumns}
       />
     </Container>
   );

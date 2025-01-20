@@ -28,7 +28,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: "ACTIVE_DRAG_ITEM_TYPE_CARD",
 };
 
-function BoardContent({ board, createNewColumn, createNewCard }) {
+function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: { distance: 10 },
   // });
@@ -260,6 +260,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
       }
     }
 
+    //Xử lí kéo thả Column trong 1 BoardContent
     if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
       if (active.id !== over.id) {
         const oldColumnIndex = orderedColumns.findIndex(
@@ -279,6 +280,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         //   "🚀 ~ handleDragEnd ~ dndOrderedColumnIds:",
         //   dndOrderedColumnIds
         // );
+        moveColumns(dndOrderedColumn);
 
         setOrderedColumns(dndOrderedColumn);
       }
