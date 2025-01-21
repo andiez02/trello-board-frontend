@@ -33,6 +33,7 @@ function BoardContent({
   createNewCard,
   moveColumns,
   moveCardInSameColumn,
+  moveCardToDifferentColumn,
 }) {
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: { distance: 10 },
@@ -71,14 +72,15 @@ function BoardContent({
   };
 
   // Cập nhật state khi di chuyển giữa các column
-  const moveCardBetweenDifferentColumn = (
+  const moveCardBetweenDifferentColumns = (
     overColumn,
     overCardId,
     active,
     over,
     activeColumn,
     activeDraggingCardId,
-    activeDraggingCardData
+    activeDraggingCardData,
+    triggerFrom
   ) => {
     setOrderedColumns((prevColumns) => {
       //Tìm vị trí (index) của overCard trong Column đích (activeCard được thả)
@@ -131,16 +133,16 @@ function BoardContent({
           columnId: nextOverColumn._id,
         };
 
-        //Xoá Placeholder Card nếu đang tồn tại
-        nextOverColumn.cards = nextOverColumn.cards.filter(
-          (card) => !card.FE_PlaceholderCard
-        );
-
         //Thêm card đang kéo vào overColumn theo vị trí index mới
         nextOverColumn.cards = nextOverColumn.cards.toSpliced(
           newCardIndex,
           0,
           rebuild_activeDraggingCardData
+        );
+
+        //Xoá Placeholder Card nếu đang tồn tại
+        nextOverColumn.cards = nextOverColumn.cards.filter(
+          (card) => !card.FE_PlaceholderCard
         );
 
         //Cập nhật mảng cardOrderIds
@@ -149,6 +151,14 @@ function BoardContent({
         );
       }
 
+      if (triggerFrom === "handleDragEnd") {
+        moveCardToDifferentColumn(
+          activeDraggingCardId,
+          oldColumnWhenDraggingCard._id,
+          nextOverColumn._id,
+          nextColumns
+        );
+      }
       return nextColumns;
     });
   };
@@ -191,14 +201,15 @@ function BoardContent({
     if (!activeColumn || !overColumn) return;
 
     if (activeColumn._id !== overColumn._id) {
-      moveCardBetweenDifferentColumn(
+      moveCardBetweenDifferentColumns(
         overColumn,
         overCardId,
         active,
         over,
         activeColumn,
         activeDraggingCardId,
-        activeDraggingCardData
+        activeDraggingCardData,
+        "handleDragOver"
       );
     }
   };
@@ -225,14 +236,15 @@ function BoardContent({
 
       if (oldColumnWhenDraggingCard._id !== overColumn._id) {
         //Kéo thả card giữa 2 column
-        moveCardBetweenDifferentColumn(
+        moveCardBetweenDifferentColumns(
           overColumn,
           overCardId,
           active,
           over,
           activeColumn,
           activeDraggingCardId,
-          activeDraggingCardData
+          activeDraggingCardData,
+          "handleDragEnd"
         );
       } else {
         //Kéo thả card trong 1 column
