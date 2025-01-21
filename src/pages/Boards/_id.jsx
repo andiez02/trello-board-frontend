@@ -13,10 +13,12 @@ import {
   updateBoardDetailAPI,
   updateColumnDetailAPI,
   moveCardToDifferentColumnAPI,
+  deleteColumnDetailAPI,
 } from "~/apis";
 import { generatePlaceholderCard } from "~/utils/formatter";
 import { isEmpty } from "lodash";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { toast } from "react-toastify";
 
 function Board() {
   const [board, setBoard] = useState(null);
@@ -146,6 +148,20 @@ function Board() {
     });
   };
 
+  const deleteColumnDetails = (columnId) => {
+    //Update state Board
+    const newBoard = { ...board };
+    newBoard.columns = newBoard.columns.filter((c) => c._id !== columnId);
+    newBoard.columnOrderIds = newBoard.columnOrderIds.filter(
+      (_id) => _id !== columnId
+    );
+    setBoard(newBoard);
+    //Call API
+    deleteColumnDetailAPI(columnId).then((res) => {
+      toast.success(res?.deleteResult);
+    });
+  };
+
   return (
     <Container disableGutters maxWidth={false} sx={{ height: "100vh" }}>
       <AppBar />
@@ -158,6 +174,7 @@ function Board() {
           moveColumns={moveColumns}
           moveCardInSameColumn={moveCardInSameColumn}
           moveCardToDifferentColumn={moveCardToDifferentColumn}
+          deleteColumnDetails={deleteColumnDetails}
         />
       ) : (
         <Box
