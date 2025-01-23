@@ -9,21 +9,27 @@ import {
 } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { createNewColumnAPI } from "~/apis";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectCurrentActiveBoard,
+  updateCurrentActiveBoard,
+} from "~/redux/activeBoard/activeBoardSlice";
+import { cloneDeep } from "lodash";
+import { generatePlaceholderCard } from "~/utils/formatter";
 
-function ListColumns({
-  columns,
-  createNewColumn,
-  createNewCard,
-  deleteColumnDetails,
-}) {
+function ListColumns({ columns }) {
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState();
+  const dispatch = useDispatch();
+
+  const board = useSelector(selectCurrentActiveBoard);
 
   const toggleOpenNewColumnForm = () => {
     setOpenNewColumnForm(!openNewColumnForm);
   };
 
-  const addNewColumn = () => {
+  const addNewColumn = async () => {
     if (!newColumnTitle) {
       toast.error("Please enter Column Title");
 
@@ -34,9 +40,20 @@ function ListColumns({
     const newColumnData = {
       title: newColumnTitle,
     };
-    //Call API
+    //Call API tạo mới Column và làm lại dữ liệu State Board
+    const createdColumn = await createNewColumnAPI({
+      ...newColumnData,
+      boardId: board._id,
+    });
+    createdColumn.cards = [generatePlaceholderCard(createdColumn)];
+    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id];
 
-    createNewColumn(newColumnData);
+    //Update state board
+    const newBoard = cloneDeep(board);
+    newBoard.columns.push(createdColumn);
+    newBoard.columnOrderIds.push(createdColumn._id);
+
+    dispatch(updateCurrentActiveBoard(newBoard));
 
     //Đóng trạng thái thêm mới & Clear Input
     toggleOpenNewColumnForm();
@@ -62,8 +79,8 @@ function ListColumns({
           <Column
             key={column._id}
             column={column}
-            createNewCard={createNewCard}
-            deleteColumnDetails={deleteColumnDetails}
+            // createNewCard={createNewCard}
+            // deleteColumnDetails={deleteColumnDetails}
           />
         ))}
 
