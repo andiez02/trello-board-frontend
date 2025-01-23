@@ -41,7 +41,6 @@ function Board() {
         }
       });
       setBoard(board);
-      console.log("🚀 ~ fetchBoardDetailAPI ~ board:", board);
     });
   }, []);
 
