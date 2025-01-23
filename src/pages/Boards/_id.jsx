@@ -2,87 +2,39 @@ import Container from "@mui/material/Container";
 import AppBar from "~/components/AppBar/AppBar";
 import BoardBar from "./BoardBar/BoardBar";
 import BoardContent from "./BoardContent/BoardContent";
-import { mapOrder } from "~/utils/sort";
 
 // import { mockData } from "~/apis/mock-data";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
-  fetchBoardDetailAPI,
-  createNewColumnAPI,
-  createNewCardAPI,
   updateBoardDetailAPI,
   updateColumnDetailAPI,
   moveCardToDifferentColumnAPI,
   deleteColumnDetailAPI,
 } from "~/apis";
-import { generatePlaceholderCard } from "~/utils/formatter";
-import { isEmpty } from "lodash";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { toast } from "react-toastify";
+import {
+  fetchBoardDetailAPI,
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard,
+} from "~/redux/activeBoard/activeBoardSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { cloneDeep } from "lodash";
 
 function Board() {
-  const [board, setBoard] = useState(null);
+  const dispatch = useDispatch();
+  // const [board, setBoard] = useState(null);
+  const board = useSelector(selectCurrentActiveBoard);
 
   useEffect(() => {
     const boardId = "67848999fd4e30cb0c0e5078";
     //Call API
-    fetchBoardDetailAPI(boardId).then((board) => {
-      //Sort column before pass data
-      board.columns = mapOrder(board.columns, board.columnOrderIds, "_id");
-
-      //Bug kéo thả Card vào 1 Column rỗng
-      board.columns.forEach((column) => {
-        if (isEmpty(column.cards)) {
-          column.cards = [generatePlaceholderCard(column)];
-          column.cardOrderIds = [generatePlaceholderCard(column)._id];
-        } else {
-          //Sort card before pass data
-          column.cards = mapOrder(column.cards, column.cardOrderIds, "_id");
-        }
-      });
-      setBoard(board);
-    });
-  }, []);
-
-  //Call API tạo mới Column và làm lại dữ liệu State Board
-  const createNewColumn = async (newColumnData) => {
-    const createdColumn = await createNewColumnAPI({
-      ...newColumnData,
-      boardId: board._id,
-    });
-    createdColumn.cards = [generatePlaceholderCard(createdColumn)];
-    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id];
-
-    //Update state board
-    const newBoard = { ...board };
-    newBoard.columns.push(createdColumn);
-    newBoard.columnOrderIds.push(createdColumn._id);
-    setBoard(newBoard);
-  };
+    dispatch(fetchBoardDetailAPI(boardId));
+  }, [dispatch]);
 
   //Call API tạo mới Card và làm lại dữ liệu State Board
-  const createNewCard = async (newCardData) => {
-    const createdCard = await createNewCardAPI({
-      ...newCardData,
-      boardId: board._id,
-    });
-
-    //Update state board
-    const newBoard = { ...board };
-    const columnToUpdate = newBoard.columns.find(
-      (column) => column._id === createdCard.columnId
-    );
-    if (columnToUpdate) {
-      if (columnToUpdate.cards.some((card) => card.FE_PlaceholderCard)) {
-        columnToUpdate.cards = [createdCard];
-        columnToUpdate.cardOrderIds = [createdCard._id];
-      } else {
-        columnToUpdate.cards.push(createdCard);
-        columnToUpdate.cardOrderIds.push(createdCard._id);
-      }
-    }
-    setBoard(newBoard);
-  };
+  // const createNewCard = async (newCardData) => {};
+  //* -> Move to Column
 
   const moveColumns = (dndOrderedColumns) => {
     const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id);
@@ -90,7 +42,7 @@ function Board() {
     const newBoard = { ...board };
     newBoard.columns = dndOrderedColumns;
     newBoard.columnOrderIds = dndOrderedColumnsIds;
-    setBoard(newBoard);
+    dispatch(updateCurrentActiveBoard(newBoard));
 
     //Call API
     updateBoardDetailAPI(newBoard._id, {
@@ -100,14 +52,14 @@ function Board() {
 
   const moveCardInSameColumn = (dndOrderedCards, dndOrderCardIds, columnId) => {
     //Update state Board
-    const newBoard = { ...board };
+    const newBoard = cloneDeep(board);
     const columnToUpdate = newBoard.columns.find(
       (column) => column._id === columnId
     );
     if (columnToUpdate) {
       columnToUpdate.cards = dndOrderedCards;
       columnToUpdate.cardOrderIds = dndOrderCardIds;
-      setBoard(newBoard);
+      dispatch(updateCurrentActiveBoard(newBoard));
     }
 
     //Call API update Board
@@ -124,7 +76,7 @@ function Board() {
     const newBoard = { ...board };
     newBoard.columns = dndOrderedColumns;
     newBoard.columnOrderIds = dndOrderedColumnsIds;
-    setBoard(newBoard);
+    dispatch(updateCurrentActiveBoard(newBoard));
 
     //Call API
     let prevCardOrderIds = dndOrderedColumns.find(
@@ -147,20 +99,6 @@ function Board() {
     });
   };
 
-  const deleteColumnDetails = (columnId) => {
-    //Update state Board
-    const newBoard = { ...board };
-    newBoard.columns = newBoard.columns.filter((c) => c._id !== columnId);
-    newBoard.columnOrderIds = newBoard.columnOrderIds.filter(
-      (_id) => _id !== columnId
-    );
-    setBoard(newBoard);
-    //Call API
-    deleteColumnDetailAPI(columnId).then((res) => {
-      toast.success(res?.deleteResult);
-    });
-  };
-
   return (
     <Container disableGutters maxWidth={false} sx={{ height: "100vh" }}>
       <AppBar />
@@ -168,12 +106,12 @@ function Board() {
       {board ? (
         <BoardContent
           board={board}
-          createNewColumn={createNewColumn}
-          createNewCard={createNewCard}
+          // createNewColumn={createNewColumn}
+          // createNewCard={createNewCard}
+          // deleteColumnDetails={deleteColumnDetails}
           moveColumns={moveColumns}
           moveCardInSameColumn={moveCardInSameColumn}
           moveCardToDifferentColumn={moveCardToDifferentColumn}
-          deleteColumnDetails={deleteColumnDetails}
         />
       ) : (
         <Box
