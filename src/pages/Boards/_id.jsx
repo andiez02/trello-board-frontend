@@ -9,10 +9,7 @@ import {
   updateBoardDetailAPI,
   updateColumnDetailAPI,
   moveCardToDifferentColumnAPI,
-  deleteColumnDetailAPI,
 } from "~/apis";
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { toast } from "react-toastify";
 import {
   fetchBoardDetailAPI,
   updateCurrentActiveBoard,
@@ -20,17 +17,22 @@ import {
 } from "~/redux/activeBoard/activeBoardSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { cloneDeep } from "lodash";
+import { useParams } from "react-router-dom";
+import PageLoadingSpinner from "~/components/Loading/PageLoadingSpinner";
+import { Box } from "@mui/material";
 
 function Board() {
   const dispatch = useDispatch();
   // const [board, setBoard] = useState(null);
   const board = useSelector(selectCurrentActiveBoard);
 
+  const { boardId } = useParams();
+
   useEffect(() => {
-    const boardId = "67848999fd4e30cb0c0e5078";
+    // const boardId = "67848999fd4e30cb0c0e5078";
     //Call API
     dispatch(fetchBoardDetailAPI(boardId));
-  }, [dispatch]);
+  }, [dispatch, boardId]);
 
   //Call API tạo mới Card và làm lại dữ liệu State Board
   // const createNewCard = async (newCardData) => {};
@@ -101,32 +103,23 @@ function Board() {
 
   return (
     <Container disableGutters maxWidth={false} sx={{ height: "100vh" }}>
-      <AppBar />
-      <BoardBar board={board} />
       {board ? (
-        <BoardContent
-          board={board}
-          // createNewColumn={createNewColumn}
-          // createNewCard={createNewCard}
-          // deleteColumnDetails={deleteColumnDetails}
-          moveColumns={moveColumns}
-          moveCardInSameColumn={moveCardInSameColumn}
-          moveCardToDifferentColumn={moveCardToDifferentColumn}
-        />
-      ) : (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            width: "100vw",
-            height: "100vh",
-          }}
-        >
-          <CircularProgress />
-          <Typography>Loading Board...</Typography>
+        <Box>
+          <AppBar />
+          <BoardBar board={board} />
+
+          <BoardContent
+            board={board}
+            // createNewColumn={createNewColumn}
+            // createNewCard={createNewCard}
+            // deleteColumnDetails={deleteColumnDetails}
+            moveColumns={moveColumns}
+            moveCardInSameColumn={moveCardInSameColumn}
+            moveCardToDifferentColumn={moveCardToDifferentColumn}
+          />
         </Box>
+      ) : (
+        <PageLoadingSpinner caption="Loading Board..." />
       )}
     </Container>
   );
