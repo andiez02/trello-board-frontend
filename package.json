@@ -21,6 +21,7 @@
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^6.0.2",
+    "@mui/lab": "^5.0.0-alpha.163",
     "@mui/material": "^5.13.0",
     "@react-three/drei": "^9.121.3",
     "@react-three/fiber": "^8.17.12",

@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 import authorizedAxiosInstance from "~/utils/authorizeAxios";
 import { API_ROOT } from "~/utils/constants";
 
@@ -20,6 +21,19 @@ export const loginUserAPI = createAsyncThunk(
   }
 );
 
+export const logoutUserAPI = createAsyncThunk(
+  "user/logoutUserAPI",
+  async (showSuccessMessage = true) => {
+    const response = await authorizedAxiosInstance.delete(
+      `${API_ROOT}/v1/users/logout`
+    );
+    if (showSuccessMessage) {
+      toast.success("Logged out successfully!");
+    }
+    return response.data;
+  }
+);
+
 // Khởi tạo một Slice trong kho lưu trữ Redux store
 export const userSlice = createSlice({
   name: "user",
@@ -31,6 +45,9 @@ export const userSlice = createSlice({
       // action.payload laf response.data trả về
       const user = action.payload;
       state.currentUser = user;
+    });
+    builder.addCase(logoutUserAPI.fulfilled, (state) => {
+      state.currentUser = null;
     });
   },
 });
